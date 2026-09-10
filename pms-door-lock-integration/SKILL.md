@@ -1,7 +1,7 @@
 ---
 name: pms-door-lock-integration
 description: |
-  门锁系统对接技能 This skill should be used when integrating a hotel PMS (Property Management System, e.g. 云店掌/绿云/西软) with a third-party door lock system (门锁软件, e.g. 汉庭/华住 MF-NK 1扇区门锁、创新佳、同创). It covers: (1) how to reverse-engineer the PMS→lock-interface calling protocol (spawn exe + URL-encoded JSON), (2) how to write a pms_interface.exe replacement that calls the lock vendor DLL (NewICdll.dll etc.), (3) card data format conversion (T0|R楼-层-房-门|D..|O..|L0), (4) the lock_room.txt room↔lock-number mapping table, (5) room-number sync from PMS click to lock software prefill, and (6) a troubleshooting knowledge base (compile pitfalls, SDK return codes, single-instance conflicts). Trigger keywords: PMS门锁对接, 门锁接口, pms_interface.exe, 制卡程序, 发卡对接, lock_room.txt, 房号同步到门锁, 汉庭门锁对接.
+  门锁系统对接技能 This skill should be used when integrating a hotel PMS (Property Management System, e.g. 云店掌/绿云/西软) with a third-party door lock system (门锁软件, e.g. 汉庭/华住 MF-NK 1扇区门锁、创新佳、同创、Temic/EM 感应式门锁、雅洁、MFCard). It covers: (1) how to reverse-engineer the PMS→lock-interface calling protocol (spawn exe + URL-encoded JSON), (2) how to write a pms_interface.exe replacement that calls the lock vendor DLL (NewICdll.dll / LCRFRW_SDK.dll etc.), (3) both lock SDK calling styles — string-style card data (T0|R楼-层-房-门|D..|O..|L0) and parameter-style (门锁编号+时间+流水号), (4) the lock_room.txt room↔lock-number mapping table, (5) room-number sync from PMS click to lock software prefill, and (6) a troubleshooting knowledge base (compile pitfalls, 0-based COM index, SDK return codes, single-instance conflicts). Trigger keywords: PMS门锁对接, 门锁接口, pms_interface.exe, 制卡程序, 发卡对接, lock_room.txt, 房号同步到门锁, 汉庭门锁对接, Temic门锁, LCRFRW_SDK.
 agent_created: true
 ---
 
@@ -36,9 +36,16 @@ agent_created: true
 1. **识别安装包类型**：NSIS（`file` 命令 / 头部特征 `NullsoftInst`）、Inno Setup、Squirrel 等。
 2. **解包**：NSIS 包内嵌 `$PLUGINSDIR\app-32.7z`，用 7-Zip 提取；**若 7z 对 NSIS 虚拟路径提取失败**，直接在安装包二进制中按 7z 魔数 `7z¼¯'` 定位并截取（见 `scripts/` 中方法，或 references/protocol.md）。
 3. **解压 asar**：Electron 核心代码在 `resources\app.asar`。新版 asar 头格式：`[0:4]magic [4:8]headerSize [8:12]unpaddedSize [12:16]jsonSize [16:]JSON`，**offset/size 字段是字符串类型需 int() 转换**。
-4. **定位门锁调用**：在主进程 `background.js` 和渲染进程 `js/chunk-*.js` 中搜索关键词：`pms_interface`、`Door_lock_call`、`门锁`、`发卡`、`lockmodel`。`spawn` + `encodeURIComponent(JSON.stringify(...))` 出现处即调用点。
+4. **定位门锁调用**：搜索关键词 `pms_interface`、`Door_lock_call`、`lockmodel`、`encodeURIComponent`。
+   `spawn` + `encodeURIComponent(JSON.stringify(...))` 出现处即调用点。
+   ⚠ **别只翻主进程**：云店掌实测把调用点放在**渲染进程** `js/app.<hash>.js` 里
+   （nodeIntegration 开启，直接 `require("child_process")`），
+   主进程 `background.js` 里搜 `pms_interface` / `Door_lock_call` 是 0 命中，容易误判为"这个 PMS 没有门锁功能"。
+   逆向时按**文件逐个体检关键词命中数**，而不是只看 background.js。
+   > 另有 `ffi-napi` / `@serialport` 出现在 asar 里属于正常依赖，不代表走 ffi 直调 DLL。
 
 典型结论（云店掌 PMS 实测）：PMS 用 `child_process.spawn` 启动 `{PMS安装目录上级}/Yolosoft_9dpmsLock/pms_interface.exe`，参数为 **URL 编码后的 JSON**；exe 操作完把结果写成 **GBK 编码 JSON** 到 `{exe目录}/{yyyyMMdd}/{fileName}.txt`，PMS 轮询该文件认结果。
+`fileName` 由 PMS 用 4 位 base36 随机串生成并注入指令，**必须原样作为回执文件名返回**。
 
 完整协议细节与指令字段表见 `references/protocol.md`。
 
@@ -65,11 +72,23 @@ agent_created: true
 **关键实现要点**：
 
 - P/Invoke 用 `CallingConvention.StdCall`，字符缓冲用 `StringBuilder`。
+- **先分清锁厂属于哪一类**，两者的 `LockSdk.cs` 写法完全不同：
+  - **字符串式**（汉庭 `NewICdll.dll` 等）：一张卡的全部内容拼成一个字符串
+    `T0|R{楼}-{层}-{房}-{门}|D{起始yyMMddHHmm}|O{结束yyMMddHHmm}|L0`（实测原版格式带 `|F` 后缀，读取时兼容），
+    调 `IssueData` 一次性写入。
+  - **参数式**（Temic/EM `LCRFRW_SDK.dll` 等）：没有卡数据串，改用多个入参表达
+    `门锁编号 / 起始时间 YYMMDDHH / 流水号 / 时间单位 / 时长 / 退房钟点 / 反锁`，
+    详见 `references/protocol.md` 第 7.1 节。
+- **串口号常是 0 基索引**：`mif_selecom(itemIndex, baud)` 配 `COM1..COM16` 的下拉列表，
+  意味着「COM11 要传 10」。这类偏移是"官方 Demo 能通、自己写的程序不通"的常见原因，
+  建议配置里让人填人读 COM 号，代码内部统一换算，并在注释里写死这条规则。
 - **发卡参数必须在 UI 线程预取**（后台线程访问控件会抛跨线程异常）。
-- 卡数据：`T0|R{楼}-{层}-{房}-{门}|D{起始yyMMddHHmm}|O{结束yyMMddHHmm}|L0`（实测原版格式带 `|F` 后缀，兼容读取）。
 - **SDK 返回码 7 = 新卡（空白卡）是正常状态**，不要当失败处理（读卡/注销都要单独分支友好提示）。
 - 打开串口后**等待 400ms 再操作**，否则发卡机未就绪会误报"无卡"。
-- 记录文件必须写 `{exe目录}/{yyyyMMdd}/{fileName}.txt`（GBK JSON），字段至少含 `order_id/action/code/message/card_no`——这是 PMS 认结果的凭证，**不能删除或合并**。
+- SDK 调用要包 `try/finally` 恢复按钮状态，否则 DLL 异常会把界面卡死。
+- 记录文件必须写 `{exe目录}/{yyyyMMdd}/{fileName}.txt`（GBK JSON），
+  必含 `order_id`；开卡类带 `remark`（开卡/复制卡/增加卡），读卡/退房类带 `action`
+  （`ReadCard` / `HotelCheckOut`）——这是 PMS 认结果的凭证，**不能删除或合并**。
 
 完整代码模式与示例见 `references/protocol.md` 和 `references/troubleshooting.md`。
 
