@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "26c48bdf-67ef-4198-84dc-532ac5a12720",
+  "path": "imagine",
+  "path_key": "imagine",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

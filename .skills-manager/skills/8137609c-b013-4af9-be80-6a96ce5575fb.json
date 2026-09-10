@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "8137609c-b013-4af9-be80-6a96ce5575fb",
+  "path": "xiao-u-hotel-saas",
+  "path_key": "xiao-u-hotel-saas",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

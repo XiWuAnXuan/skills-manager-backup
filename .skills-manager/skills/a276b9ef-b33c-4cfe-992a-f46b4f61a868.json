@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "a276b9ef-b33c-4cfe-992a-f46b4f61a868",
+  "path": "geb",
+  "path_key": "geb",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

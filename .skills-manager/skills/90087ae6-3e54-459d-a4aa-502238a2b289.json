@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "90087ae6-3e54-459d-a4aa-502238a2b289",
+  "path": "door-lock-ui-template",
+  "path_key": "door-lock-ui-template",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

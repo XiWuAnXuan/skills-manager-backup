@@ -1,0 +1,4 @@
+﻿interface:
+  display_name: "小 U 酒店 SaaS"
+  short_description: "小 U 酒店云店掌/PMS/POS 业务流程与文档写作口径"
+  default_prompt: "按小 U 酒店云店掌文档风格，帮我整理培训、操作手册、实施流程或问题解答。"

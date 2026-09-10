@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "f529c821-1f62-4380-8bef-7060f38e89a2",
+  "path": "design-taste-frontend",
+  "path_key": "design-taste-frontend",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

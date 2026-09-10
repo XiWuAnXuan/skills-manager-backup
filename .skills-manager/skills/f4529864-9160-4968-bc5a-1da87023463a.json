@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "f4529864-9160-4968-bc5a-1da87023463a",
+  "path": "agnes-imagegen",
+  "path_key": "agnes-imagegen",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

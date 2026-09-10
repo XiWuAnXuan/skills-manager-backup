@@ -1,0 +1,3 @@
+﻿display_name: Agnes Image Generator
+short_description: Generate and edit images with Agnes Image 2.1 Flash
+default_prompt: Use the agnes-imagegen skill to generate an image. Create a text-to-image prompt with subject, scene, style, lighting, and composition details, then run: python scripts/imagegen.py text2img -p \"your prompt\" -s 1024x768 -o output.png

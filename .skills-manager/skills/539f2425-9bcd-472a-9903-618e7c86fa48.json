@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "539f2425-9bcd-472a-9903-618e7c86fa48",
+  "path": "clone-website",
+  "path_key": "clone-website",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "ebb24471-084a-4510-97ae-9b0558e6f0d8",
+  "path": "check-work",
+  "path_key": "check-work",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

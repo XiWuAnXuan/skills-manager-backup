@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "c50697bb-659d-4e56-b8c3-20ed638ac4b0",
+  "path": "industrial-brutalist-ui",
+  "path_key": "industrial-brutalist-ui",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

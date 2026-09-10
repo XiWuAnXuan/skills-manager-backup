@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "671f944e-ce5d-484f-9e2c-be866a52de79",
+  "path": "pms-door-lock-integration",
+  "path_key": "pms-door-lock-integration",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}
